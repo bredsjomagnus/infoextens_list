@@ -268,27 +268,25 @@ def check_name(klass, info_name, ext_firstname, ext_lastname):
 
 def find_corresponding_name(name, personnummer, df):
 
-
-    student_personnummer_series = df[df['Personnummer'].str.contains(personnummer)]
-    student_name_series = df[df['Namn'].str.contains(name)]
-
-    res = {}
-    if len(student_personnummer_series) > 0:
+    res = {
+        "namn": "NOT FOUND",
+        "personnummer": "NOT FOUND"
+    }
+    try:
+        student_personnummer_series = df[df['Personnummer'].str.contains(personnummer)]
         res = {
-            "namn": str(student_name_series['Namn'].values[0]),
-            "personnummer": str(student_name_series['Personnummer'].values[0])
+            "namn": str(student_personnummer_series['Namn'].values[0]),
+            "personnummer": str(student_personnummer_series['Personnummer'].values[0])
         }
-    else:
-        if len(student_name_series) > 0:
+    except:
+        try:
+            student_name_series = df[df['Namn'].str.contains(name)]
             res = {
                 "namn": str(student_name_series['Namn'].values[0]),
-            "personnummer": str(student_name_series['Personnummer'].values[0])
+                "personnummer": str(student_name_series['Personnummer'].values[0])
             }
-        else:
-            res = {
-                "namn": "NOT FOUND",
-                "personnummer": "NOT FOUND"
-            }
+        except:
+            pass
     
     return res
 
@@ -339,29 +337,18 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
         row = []
         if ext_longer:
             for i, klass in enumerate(ext_klass):
-                try:
-                    student = {}
-                    student = find_corresponding_name(ext_namn[i], ext_personnummer[i], info_klass_df)
-                    
-                    # check_name(info_klass[i], info_namn[i], ext_firstname[i], ext_lastname[i])
-                    row = [info_klass[i], student['namn'], student['personnummer'], ext_klass[i], ext_namn[i], ext_personnummer[i], "EXTENS"]
-                except Exception as e:
-                    print(e)
+                student = {}
+                student = find_corresponding_name(ext_namn[i], ext_personnummer[i], info_klass_df)
 
-                    row = ["-", "-", "-", ext_klass[i], ext_namn[i], ext_personnummer[i], "EXTENS"]
+                row = [ext_klass[i], student['namn'], student['personnummer'], ext_klass[i], ext_namn[i], ext_personnummer[i], "EXTENS"]
+
                 content.append(row)
         else:
             for i, klass in enumerate(info_klass):
-                try:
-                    student = {}
-                    student = find_corresponding_name(info_namn[i], info_personnummer[i], ext_klass_df)
-                    # check_name(info_klass[i], info_namn[i], ext_firstname[i], ext_lastname[i])
-
-                    # print(type(ext_student))
-                    row = [info_klass[i], info_namn[i], info_personnummer[i], ext_klass[i], student['namn'], student['personnummer'], "INFOMENTOR"]
-                except Exception as e:
-                    print(e)
-                    row = [info_klass[i], info_namn[i], info_personnummer[i], "-", "-", "-", "INFOMENTOR"]
+                student = {}
+                student = find_corresponding_name(info_namn[i], info_personnummer[i], ext_klass_df)
+                
+                row = [info_klass[i], info_namn[i], info_personnummer[i], info_klass[i], student['namn'], student['personnummer'], "INFOMENTOR"]
                 content.append(row)
         empty_row = ["", "", "", "", "", ""]
         content.append(empty_row)
