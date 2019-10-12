@@ -170,10 +170,13 @@ def create_spreadsheet(service):
     Create new spreadsheet
     """
     print("Beginning process...")
+
+    time_stamp = str(datetime.datetime.now())[:10] # 2019-09-04
+    spreadsheet_name = time_stamp + '_' + SPREADSHEET_TITLE
     SPREADSHEET_ID = ""
     spreadsheet_body = {
         "properties": {
-            "title": SPREADSHEET_TITLE
+            "title": spreadsheet_name
         }
     }
     try:
