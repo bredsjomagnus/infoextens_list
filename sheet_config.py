@@ -1,6 +1,7 @@
-header = [["Klass [INFOMENTOR]", "Namn [INFOMENTOR]", "Personnummer [INFOMENTOR]", "Klass [EXTENS]", "Namn [EXTENS]", "Personnummer [EXTENS]", "LISTA"]]
+header = [["Klass [INFOMENTOR]", "Namn [INFOMENTOR]", "Personnummer [INFOMENTOR]", "Klass [EXTENS]", "Namn [EXTENS]", "Personnummer [EXTENS]"]]
+reported_header = [["Klass [INFOMENTOR]", "Namn [INFOMENTOR]", "Personnummer [INFOMENTOR]", "Klass [EXTENS]", "Namn [EXTENS]", "Personnummer [EXTENS]", "KOMMENTAR"]]
 # sheet_names = ["Samlat", "1A", "1B", "1C", "1D", "2A", "2B", "2C", "2D", "3A", "3B", "3C", "3D", "4A", "4B", "4C", "4D", "5A", "5B", "5C", "5D", "6A", "6B", "6C", "6D", "7A", "7B", "7C", "8A", "8B", "8C", "9A", "9B", "9C"]
-sheet_names = ["Samlat"]
+sheet_names = ["Samlat", "Avvikelser"]
 klasser = ["1A", "1B", "1C", "1D", "2A", "2B", "2C", "2D", "3A", "3B", "3C", "3D", "4A", "4B", "4C", "4D", "5A", "5B", "5C", "5D", "6A", "6B", "6C", "6D", "7A", "7B", "7C", "8A", "8B", "8C", "9A", "9B", "9C"]
 
 ##### BUILDING SHEETS #####

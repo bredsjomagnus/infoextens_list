@@ -293,17 +293,54 @@ def find_corresponding_name(name, personnummer, df):
     
     return res
 
+def is_lists_equal(row):
+    equal = True
+    missing = False
+    reason = []
+    if row[1] == "NOT FOUND":
+        reason.append("Saknas i Infomentor")
+        missing = True
+        equal = False
+    elif row[4] == "NOT FOUND":
+        reason.append("Saknas i Extens")
+        missing = True
+        equal = False
+    
+    if not missing:
+        if row[1].lower() != row[4].lower():
+            equal = False
+            reason.append("Namnet")
+        if row[2].lower() != row[5].lower():
+            equal = False
+            reason.append("Personnummret")
+
+    if len(reason) > 1:
+        print(reason)
+    return equal, reason
+
+
 def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
     sheet_name = sheet_names[0]
 
     # ADDING HEADER
     content = []
+    reported_content = []
     content = header
-    print("content:",content)
+    reported_content = reported_header
+    # print("content:",content)
     sheet_range = sheet_name + "!A1"
+    reported_range = "Avvikelser!A1"
     try:
         range = sheet_range
         values = content
+        resource = {
+            "values": values
+        }
+        # use append to add rows and update to overwrite
+        response = service.spreadsheets().values().update(spreadsheetId=SPREADSHEET_ID, range=range, body=resource, valueInputOption="USER_ENTERED").execute()
+
+        range = reported_range
+        values = reported_content
         resource = {
             "values": values
         }
@@ -315,6 +352,7 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
 
     # CONTENT
     content = []
+    reported_content = []
 
 
     for klass in klasser:
@@ -343,7 +381,13 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
                 student = {}
                 student = find_corresponding_name(ext_namn[i], ext_personnummer[i], info_klass_df)
 
-                row = [ext_klass[i], student['namn'], student['personnummer'], ext_klass[i], ext_namn[i], ext_personnummer[i], "EXTENS"]
+                row = [ext_klass[i], student['namn'], student['personnummer'], ext_klass[i], ext_namn[i], ext_personnummer[i]]
+                
+                equal, reasons = is_lists_equal(row)
+                if not equal:
+                    reason_string =', '.join(map(str, reasons))
+                    row.append(reason_string)
+                    reported_content.append(row)
 
                 content.append(row)
         else:
@@ -351,17 +395,35 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
                 student = {}
                 student = find_corresponding_name(info_namn[i], info_personnummer[i], ext_klass_df)
                 
-                row = [info_klass[i], info_namn[i], info_personnummer[i], info_klass[i], student['namn'], student['personnummer'], "INFOMENTOR"]
+                row = [info_klass[i], info_namn[i], info_personnummer[i], info_klass[i], student['namn'], student['personnummer']]
+
+                equal, reasons = is_lists_equal(row)
+                if not equal:
+                    reason_string =', '.join(map(str, reasons))
+                    row.append(reason_string)
+                    reported_content.append(row)
+
+
                 content.append(row)
         empty_row = ["", "", "", "", "", ""]
         content.append(empty_row)
+        # reported_content.append(empty_row)
         
 
-
-    sheet_range = sheet_name + "!A2:G"
+    print("FOUND %s DEVIATIONS" % (len(reported_content)))
+    sheet_range = sheet_name + "!A2"
+    reported_range = "Avvikelser!A2"
     try:
         range = sheet_range
         values = content
+        resource = {
+            "values": values
+        }
+        # use append to add rows and update to overwrite
+        response = service.spreadsheets().values().update(spreadsheetId=SPREADSHEET_ID, range=range, body=resource, valueInputOption="USER_ENTERED").execute()
+
+        range = reported_range
+        values = reported_content
         resource = {
             "values": values
         }
