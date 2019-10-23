@@ -98,7 +98,7 @@ def get_extens(service, EXTENS_ID):
             'Personnummer': personnummers,
         }
         df_extens = pd.DataFrame.from_dict(elevlista_dict)
-        df_extens.to_csv(FILENAME, sep=",", index=False)
+        # df_extens.to_csv(FILENAME, sep=",", index=False)
 
         return df_extens
 
@@ -161,7 +161,7 @@ def get_infomentor(service, INFOMENTOR_ID):
             'Personnummer': personnummers,
         }
         df_infomentor = pd.DataFrame.from_dict(infomentor_dict)
-        df_infomentor.to_csv(FILENAME, sep=",", index=False)
+        # df_infomentor.to_csv(FILENAME, sep=",", index=False)
 
     return df_infomentor
 
@@ -360,20 +360,22 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
         Tar ut klass för klass. 
         Kollar om de är lika långa. 
         Utgår från den lista som eventuellt är längst, annars Infomentors. 
-        Sätter sen ut ett mellanrum.
+
+        Letar efter korresponderande elev i andra listan och placerar dessa
+        båda på samma rad i nya spreadsheetet.
         """
-        info_klass_df = df_infomentor[df_infomentor['Klass'].str.contains(klass)]
-        ext_klass_df = df_extens[df_extens['Klass'].str.contains(klass)]
+        info_klass_df = df_infomentor[df_infomentor['Klass'].str.contains(klass)]   # alla elever ur klassen 'klass' i elevlistan
+        ext_klass_df = df_extens[df_extens['Klass'].str.contains(klass)]            # alla elever ur klassen 'klass' i extenslistan
 
-        info_klass = info_klass_df.loc[:,'Klass'].tolist()
-        info_namn = info_klass_df.loc[:,'Namn'].tolist()
-        info_personnummer = info_klass_df.loc[:,'Personnummer'].tolist()
+        info_klass = info_klass_df.loc[:,'Klass'].tolist()                  # klasstillhörighet i en lista; ["7A", "7A", "7A",...]
+        info_namn = info_klass_df.loc[:,'Namn'].tolist()                    # elevernas namn i en lista
+        info_personnummer = info_klass_df.loc[:,'Personnummer'].tolist()    # elevernas personnummer i en lista
 
-        ext_klass = ext_klass_df.loc[:,'Klass'].tolist()
-        ext_namn = ext_klass_df.loc[:,'Namn'].tolist()
-        ext_personnummer = ext_klass_df.loc[:,'Personnummer'].tolist()
+        ext_klass = ext_klass_df.loc[:,'Klass'].tolist()                    # klasstillhörighet i en lista; ["7A", "7A", "7A",...]
+        ext_namn = ext_klass_df.loc[:,'Namn'].tolist()                      # elevernas namn i en lista
+        ext_personnummer = ext_klass_df.loc[:,'Personnummer'].tolist()      # elevernas personnummer i en lista
 
-        ext_longer = len(info_klass_df.index) < len(ext_klass_df)
+        ext_longer = len(info_klass_df.index) < len(ext_klass_df)           # is class in extenslista longer than in elevlista?
 
         row = []
         if ext_longer:
