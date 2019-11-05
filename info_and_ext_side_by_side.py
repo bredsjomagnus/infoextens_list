@@ -7,6 +7,7 @@ import getopt
 import pickle
 import os.path
 import pprint
+from termcolor import colored, cprint
 from env import *
 from sheet_config import *
 from googleapiclient.discovery import build
@@ -63,7 +64,7 @@ def get_extens(service, EXTENS_ID):
     if not values:
         print('No data found in extens.')
     else:
-        print('Läser in extensfil från Driven till Dataframe:')
+        # print('Läser in extensfil från Driven till Dataframe:')
         klasser = []
         personnummers = []
         names = []
@@ -91,7 +92,7 @@ def get_extens(service, EXTENS_ID):
                     print("While reading rows from file error ->", e)
                     print("Null at ", row[1])
                     print()
-        print("Skapar DataFrame och sparar som %s" % (FILENAME))
+        # print("Skapar DataFrame och sparar som %s" % (FILENAME))
         elevlista_dict = {
             'Klass': klasser,
             'Namn': names,
@@ -118,7 +119,7 @@ def get_infomentor(service, INFOMENTOR_ID):
     if not values:
         print('No data found in extens.')
     else:
-        print('Läser in infomentorfil från Driven till Dataframe:')
+        # print('Läser in infomentorfil från Driven till Dataframe:')
         klasser = []
         personnummers = []
         names = []
@@ -154,7 +155,7 @@ def get_infomentor(service, INFOMENTOR_ID):
                     print("While reading rows from file error ->", e)
                     print("Null at ", row[1])
                     print()
-        print("Skapar DataFrame och sparar som %s" % (FILENAME))
+        # print("Skapar DataFrame och sparar som %s" % (FILENAME))
         infomentor_dict = {
             'Klass': klasser,
             'Namn': names,
@@ -169,7 +170,7 @@ def create_spreadsheet(service):
     """
     Create new spreadsheet
     """
-    print("Beginning process...")
+    # print("Beginning process...")
 
     time_stamp = str(datetime.datetime.now())[:10] # 2019-09-04
     spreadsheet_name = time_stamp + '_' + SPREADSHEET_TITLE
@@ -183,7 +184,7 @@ def create_spreadsheet(service):
         request = service.spreadsheets().create(body=spreadsheet_body)
         spreadsheet = request.execute()
         SPREADSHEET_ID = spreadsheet['spreadsheetId']
-        print("spreadsheet id: ", SPREADSHEET_ID)
+        # print("spreadsheet id: ", SPREADSHEET_ID)
     except Exception as e:
         print("While trying to create new spreadsheet error: ", e)
         sys.exit()
@@ -197,13 +198,13 @@ def update_spreadsheet(service, SPREADSHEET_ID, body, message="No message"):
 
     response = service.spreadsheets().batchUpdate(spreadsheetId=SPREADSHEET_ID, body=body).execute()
 
-    print(message)
+    # print(message)
 
     return response
 
 def create_sheets(service, SPREADSHEET_ID, sheet_objects):
     requests = []
-    print("Creating sheets...")
+    # print("Creating sheets...")
     # CREATE SHEETS
     for sheet in sheet_objects:
         requests.append(sheet_objects[sheet])
@@ -224,7 +225,7 @@ def get_sheet_ids(service, SPREADSHEET_ID):
     """
     Getting the proporites of the created sheets.
     """
-    print("Getting sheet proporties...")
+    # print("Getting sheet proporties...")
     sheet_dict = {}
     # Trying to get sheetIds
     try:
@@ -239,7 +240,7 @@ def get_sheet_ids(service, SPREADSHEET_ID):
     except Exception as e:
         print("While trying spreadsheets().get() error: ", e)
         sys.exit()
-    pp.pprint(sheet_dict)
+    # pp.pprint(sheet_dict)
     return sheet_dict
 
 def customize_columns(service, SPREADSHEET_ID, columns):
@@ -247,7 +248,7 @@ def customize_columns(service, SPREADSHEET_ID, columns):
     Set column width in sheets. columns is generated in sheet_config.py
     based on template and sheetId
     """
-    print("Setting column and row widths in the sheets")
+    # print("Setting column and row widths in the sheets")
     requests = []
     for key in columns:
         requests.append(columns[key])
@@ -273,20 +274,23 @@ def find_corresponding_name(name, personnummer, df):
 
     res = {
         "namn": "NOT FOUND",
-        "personnummer": "NOT FOUND"
+        "personnummer": "NOT FOUND",
+        "matching": 'NOT FOUND'
     }
     try:
         student_personnummer_series = df[df['Personnummer'].str.contains(personnummer)]
         res = {
             "namn": str(student_personnummer_series['Namn'].values[0]),
-            "personnummer": str(student_personnummer_series['Personnummer'].values[0])
+            "personnummer": str(student_personnummer_series['Personnummer'].values[0]),
+            "matching": "Personnummer"
         }
     except:
         try:
             student_name_series = df[df['Namn'].str.contains(name)]
             res = {
                 "namn": str(student_name_series['Namn'].values[0]),
-                "personnummer": str(student_name_series['Personnummer'].values[0])
+                "personnummer": str(student_name_series['Personnummer'].values[0]),
+                "matching": "Namn"
             }
         except:
             pass
@@ -377,6 +381,13 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
 
         ext_longer = len(info_klass_df.index) < len(ext_klass_df)           # is class in extenslista longer than in elevlista?
 
+        not_found_in_other = 0
+        not_found_students = []
+        found_in_other = 0  # counter to check so that no students in smaller list is overlooked
+        found_in_class = ""
+
+        class_reasons = []
+
         row = []
         if ext_longer:
             for i, klass in enumerate(ext_klass):
@@ -392,6 +403,30 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
                     reported_content.append(row)
 
                 content.append(row)
+
+                # checking if all students in infolist for this class is found.
+                if student['matching'] == "NOT FOUND":
+                    not_found_in_other += 1
+                    found_in_class = ext_klass[i]
+                    not_found_students.append(ext_namn[i])
+                else:
+                    found_in_other += 1
+                    found_in_class = ext_klass[i]
+                
+                if len(reasons) > 0:
+                    class_reasons.append([ext_klass[i], ext_namn[i], ext_personnummer[i], reason_string])
+            
+            if found_in_other == len(info_klass_df.index):
+                cprint("Class %s    Matched students in Infomentorlist: %s,       Number of students in Infomentorlist: %d" % (found_in_class, found_in_other, len(info_klass_df.index)), 'green')
+            elif len(info_klass_df.index) > found_in_other:
+                cprint("Class %s    Matched students in Infomentorlist: %s,       Number of students in Infomentorlist: %d STUDENT IN INFOMENTORLIST OVERLOOKED" % (found_in_class, found_in_other, len(info_klass_df.index)), 'red')
+            
+            if len(class_reasons) > 0:
+                cprint("Class %s    Students that differ in Infomentorlist compared to Extenslist: " % (found_in_class), 'yellow', end="")
+                for cr in class_reasons:
+                    cprint("%s; %s; '%s'" % (cr[1], cr[2], cr[3].upper()), 'cyan')
+                print()
+
         else:
             for i, klass in enumerate(info_klass):
                 student = {}
@@ -405,14 +440,40 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
                     row.append(reason_string)
                     reported_content.append(row)
 
-
                 content.append(row)
+
+                # checking if all students in infolist for this class is found.
+                if student['matching'] == "NOT FOUND":
+                    not_found_in_other += 1
+                    found_in_class = info_klass[i]
+                    not_found_students.append(info_namn[i])
+                else: # if a match exists add to counter for matched students
+                    found_in_other += 1
+                    found_in_class = info_klass[i]
+                
+                if len(reasons) > 0: # if deviation reason exist append this to class_reasons list
+                    class_reasons.append([info_klass[i], info_namn[i], info_personnummer[i], reason_string])
+                
+            
+            # after for loop check if found matches corresponds to list length
+            if found_in_other == len(ext_klass_df.index):
+                cprint("Class %s    Matched students in Extenslist: %s,       Number of students in Extenslist: %d" % (found_in_class, found_in_other, len(ext_klass_df.index)), 'green')
+            elif len(ext_klass_df.index) > found_in_other:
+                cprint("Class %s    Matched students in Extenslist: %s,       Number of students in Extenslist: %d STUDENT IN EXTENSLIST OVERLOOKED" % (found_in_class, found_in_other, len(ext_klass_df.index)), 'red')
+            
+            # after for loop display eventual devaition reasons
+            if len(class_reasons) > 0:
+                cprint("Class %s    Students that differ in Extenslist compared to Infomentorlist: " % (found_in_class), 'yellow', end="")
+                for cr in class_reasons:
+                    cprint("%s; %s; '%s'" % (cr[1], cr[2], cr[3].upper()), 'cyan')
+                print()
+            
         empty_row = ["", "", "", "", "", ""]
         content.append(empty_row)
         # reported_content.append(empty_row)
         
-
-    print("FOUND %s DEVIATIONS" % (len(reported_content)))
+    print()
+    print("FOUND %s DEVIATIONS!" % (len(reported_content)), end=" ")
     sheet_range = sheet_name + "!A2"
     reported_range = "Avvikelser!A2"
     try:
@@ -433,6 +494,8 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
         response = service.spreadsheets().values().update(spreadsheetId=SPREADSHEET_ID, range=range, body=resource, valueInputOption="USER_ENTERED").execute()
     except Exception as e:
         print("While trying to append values error: ", e)
+    
+    print("REPORT CREATED!")
 
 service = authenticate()
 df_extens = get_extens(service, EXTENS_ID)
@@ -443,4 +506,5 @@ create_sheets(service, SPREADSHEET_ID, sheet_objects)           # Skapar sheets:
 sheet_dict = get_sheet_ids(service, SPREADSHEET_ID)             # sheet_dict:{"7A": sheet id nummer,...}
 columns_object = generate_columns_update_object(sheet_dict)            # Skapar requestobjekt för justering av kolumnvidder
 customize_columns(service, SPREADSHEET_ID, columns_object)             # Ändrar kolumnvidd i sheets:service.spreadsheets().batchUpdate
+print()
 add_content(service, SPREADSHEET_ID, df_infomentor, df_extens)                # Lägger till innehåll i sheets:service.spreadsheets().values().update
