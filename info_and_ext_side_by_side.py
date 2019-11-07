@@ -417,9 +417,9 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
                     class_reasons.append([ext_klass[i], ext_namn[i], ext_personnummer[i], reason_string])
             
             if found_in_other == len(info_klass_df.index):
-                cprint("Class %s    Matched students in Infomentorlist: %s,       Number of students in Infomentorlist: %d" % (found_in_class, found_in_other, len(info_klass_df.index)), 'green')
+                cprint("Class %s    Compare agains Extlist: %d    Matched students in Infomentorlist: %s, Number of students in Infomentorlist: %d" % (found_in_class, len(ext_klass_df.index), found_in_other, len(info_klass_df.index)), 'green')
             elif len(info_klass_df.index) > found_in_other:
-                cprint("Class %s    Matched students in Infomentorlist: %s,       Number of students in Infomentorlist: %d STUDENT IN INFOMENTORLIST OVERLOOKED" % (found_in_class, found_in_other, len(info_klass_df.index)), 'red')
+                cprint("Class %s    Matched students in Infomentorlist: %s, Number of students in Infomentorlist: %d STUDENT IN INFOMENTORLIST OVERLOOKED" % (found_in_class, found_in_other, len(info_klass_df.index)), 'red')
             
             if len(class_reasons) > 0:
                 cprint("Class %s    Students that differ in Infomentorlist compared to Extenslist: " % (found_in_class), 'yellow', end="")
@@ -457,9 +457,9 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
             
             # after for loop check if found matches corresponds to list length
             if found_in_other == len(ext_klass_df.index):
-                cprint("Class %s    Matched students in Extenslist: %s,       Number of students in Extenslist: %d" % (found_in_class, found_in_other, len(ext_klass_df.index)), 'green')
+                cprint("Class %s    Compare agains Infolist: %d   Matched students in Extenslist: %s,     Number of students in Extenslist: %d" % (found_in_class, len(info_klass_df.index), found_in_other, len(ext_klass_df.index)), 'green')
             elif len(ext_klass_df.index) > found_in_other:
-                cprint("Class %s    Matched students in Extenslist: %s,       Number of students in Extenslist: %d STUDENT IN EXTENSLIST OVERLOOKED" % (found_in_class, found_in_other, len(ext_klass_df.index)), 'red')
+                cprint("Class %s    Matched students in Extenslist: %s,     Number of students in Extenslist: %d STUDENT IN EXTENSLIST OVERLOOKED" % (found_in_class, found_in_other, len(ext_klass_df.index)), 'red')
             
             # after for loop display eventual devaition reasons
             if len(class_reasons) > 0:
