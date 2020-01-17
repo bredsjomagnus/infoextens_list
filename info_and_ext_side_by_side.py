@@ -422,9 +422,10 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
                 cprint("Class %s    Matched students in Infomentorlist: %s, Number of students in Infomentorlist: %d STUDENT IN INFOMENTORLIST OVERLOOKED" % (found_in_class, found_in_other, len(info_klass_df.index)), 'red')
             
             if len(class_reasons) > 0:
-                cprint("Class %s    Students that differ in Infomentorlist compared to Extenslist: " % (found_in_class), 'yellow', end="")
+                cprint("Class %s    Students that differ in Infomentorlist compared to Extenslist: " % (found_in_class), 'yellow')
                 for cr in class_reasons:
-                    cprint("%s; %s; '%s'" % (cr[1], cr[2], cr[3].upper()), 'cyan')
+                    cprint("\t\t\t\t\t\t\t\t\t\t%s; %s; '%s'" %
+                           (cr[1], cr[2], cr[3].upper()), 'cyan')
                 print()
 
         else:
@@ -463,9 +464,10 @@ def add_content(service, SPREADSHEET_ID, df_infomentor, df_extens):
             
             # after for loop display eventual devaition reasons
             if len(class_reasons) > 0:
-                cprint("Class %s    Students that differ in Extenslist compared to Infomentorlist: " % (found_in_class), 'yellow', end="")
+                cprint("Class %s    Students that differ in Extenslist compared to Infomentorlist: " % (found_in_class), 'yellow')
                 for cr in class_reasons:
-                    cprint("%s; %s; '%s'" % (cr[1], cr[2], cr[3].upper()), 'cyan')
+                    cprint("\t\t\t\t\t\t\t\t\t\t%s; %s; '%s'" %
+                           (cr[1], cr[2], cr[3].upper()), 'cyan')
                 print()
             
         empty_row = ["", "", "", "", "", ""]
